@@ -1,4 +1,4 @@
-package space.gavinklfong.supermarket.models;
+package space.gavinklfong.spring.cassandra.models;
 
 import lombok.AccessLevel;
 import lombok.Builder;

@@ -8,8 +8,12 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.CassandraContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import space.gavinklfong.spring.cassandra.models.SimpleCustomer;
+import space.gavinklfong.spring.cassandra.models.DeliveryTimeslot;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -21,7 +25,7 @@ public class DeliveryTimeslotRepoTest {
     @Container
     static final CassandraContainer container =
             new CassandraContainer("cassandra")
-                    .withInitScript("simple-customer.cql");
+                    .withInitScript("delivery-timeslot.cql");
 
     @DynamicPropertySource
     static void dataSourceProperties(DynamicPropertyRegistry registry) {
@@ -32,27 +36,23 @@ public class DeliveryTimeslotRepoTest {
     }
 
     @Autowired
-    SimpleCustomerRepo simpleCustomerRepo;
+    DeliveryTimeslotRepo deliveryTimeslotRepo;
 
     @Test
     void testFindById() {
-        final String CUSTOMER_ID = "7febc928-a5d0-40d5-ad71-ef7ebe2f2fe3";
-        Optional<SimpleCustomer> customer = simpleCustomerRepo.findById(UUID.fromString(CUSTOMER_ID));
-        assertThat(customer).isNotNull().isNotEmpty();
-        assertThat(customer.get().getId()).isEqualTo(UUID.fromString(CUSTOMER_ID));
+        Optional<DeliveryTimeslot> deliveryTimeslotOptional = deliveryTimeslotRepo.findById(
+                DeliveryTimeslot.Key.builder()
+                        .deliveryDate(LocalDate.parse("2022-02-15"))
+                        .startTime(LocalTime.parse("09:00"))
+                        .deliveryTeamId(UUID.fromString("f53a21cb-f056-499b-a6b2-3832232fa6e6"))
+                        .build());
+        assertThat(deliveryTimeslotOptional).isNotEmpty();
     }
 
     @Test
-    void testSave() {
-        SimpleCustomer newCustomer = SimpleCustomer.builder()
-                .id(UUID.randomUUID())
-                .name("new customer")
-                .email("new-customer@test.com")
-                .telephone("1234567890")
-                .build();
-        simpleCustomerRepo.save(newCustomer);
-
-        Optional<SimpleCustomer> newlySavedCustomer = simpleCustomerRepo.findById(newCustomer.getId());
-        assertThat(newlySavedCustomer).isNotNull().isNotEmpty().get().isEqualTo(newCustomer);
+    void testFindByDeliveryDate() {
+        List<DeliveryTimeslot> timeslots = deliveryTimeslotRepo.findByDeliveryDate(LocalDate.of(2022, 2, 15));
+        assertThat(timeslots).hasSize(3)
+                .isSortedAccordingTo(Comparator.comparing(a -> a.getKey().getStartTime()));
     }
 }

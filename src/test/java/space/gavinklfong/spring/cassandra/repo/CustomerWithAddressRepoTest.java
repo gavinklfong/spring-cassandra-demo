@@ -8,7 +8,8 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.CassandraContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import space.gavinklfong.spring.cassandra.models.SimpleCustomer;
+import space.gavinklfong.spring.cassandra.models.Address;
+import space.gavinklfong.spring.cassandra.models.CustomerWithAddress;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -21,7 +22,7 @@ public class CustomerWithAddressRepoTest {
     @Container
     static final CassandraContainer container =
             new CassandraContainer("cassandra")
-                    .withInitScript("simple-customer.cql");
+                    .withInitScript("customer-with-address.cql");
 
     @DynamicPropertySource
     static void dataSourceProperties(DynamicPropertyRegistry registry) {
@@ -32,27 +33,34 @@ public class CustomerWithAddressRepoTest {
     }
 
     @Autowired
-    SimpleCustomerRepo simpleCustomerRepo;
+    CustomerWithAddressRepo customerRepo;
 
     @Test
     void testFindById() {
         final String CUSTOMER_ID = "7febc928-a5d0-40d5-ad71-ef7ebe2f2fe3";
-        Optional<SimpleCustomer> customer = simpleCustomerRepo.findById(UUID.fromString(CUSTOMER_ID));
+        Optional<CustomerWithAddress> customer = customerRepo.findById(UUID.fromString(CUSTOMER_ID));
         assertThat(customer).isNotNull().isNotEmpty();
         assertThat(customer.get().getId()).isEqualTo(UUID.fromString(CUSTOMER_ID));
+        assertThat(customer.get().getAddress()).isNotNull();
     }
 
     @Test
     void testSave() {
-        SimpleCustomer newCustomer = SimpleCustomer.builder()
+        CustomerWithAddress newCustomer = CustomerWithAddress.builder()
                 .id(UUID.randomUUID())
                 .name("new customer")
                 .email("new-customer@test.com")
                 .telephone("1234567890")
+                .address(Address.builder()
+                        .streetAddress("123 Haydon Road")
+                        .city("New York")
+                        .country("USA")
+                        .zipcode("123445")
+                        .build())
                 .build();
-        simpleCustomerRepo.save(newCustomer);
+        customerRepo.save(newCustomer);
 
-        Optional<SimpleCustomer> newlySavedCustomer = simpleCustomerRepo.findById(newCustomer.getId());
+        Optional<CustomerWithAddress> newlySavedCustomer = customerRepo.findById(newCustomer.getId());
         assertThat(newlySavedCustomer).isNotNull().isNotEmpty().get().isEqualTo(newCustomer);
     }
 }

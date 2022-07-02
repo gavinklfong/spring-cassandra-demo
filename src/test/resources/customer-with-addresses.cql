@@ -10,20 +10,22 @@ CREATE TYPE supermarket.address_type (
 );
 
 -- Create customer table
-CREATE TABLE supermarket.customers (
+CREATE TABLE supermarket.customer_with_addresses (
   id uuid,
   name text,
   telephone text,
   email text,
   default_address_key text,
-  address frozen<address_type>,
+  addresses map<text, frozen<address_type>>,
   PRIMARY KEY (id)
 );
 
 -- Insert customer records
-INSERT INTO supermarket.customers (id, name, telephone, email, address)
-VALUES (28a76352-0102-45ae-81c7-aeb25cc228f9, 'John', '012345678912345', 'john@gmail.com',
-{street_address: '2284 Lenna Lodge', city: 'Longmont', country: 'Belgium', zipcode: '05874'});
-INSERT INTO supermarket.customers (id, name, telephone, email, address)
-VALUES (7febc928-a5d0-40d5-ad71-ef7ebe2f2fe3, 'Peter', '012345678912345', 'peter@gmail.com',
-{street_address: '1059 Ardella Center', city: 'Dundalk', country: 'Dominican Republic', zipcode: '47368'});
+INSERT INTO supermarket.customer_with_addresses (id, name, telephone, email, default_address_key, addresses)
+VALUES (28a76352-0102-45ae-81c7-aeb25cc228f9, 'John', '012345678912345', 'john@gmail.com', 'HOME',
+{'HOME': {street_address: '2284 Lenna Lodge', city: 'Longmont', country: 'Belgium', zipcode: '05874'},
+'OFFICE': {street_address: '700 Hintz Causeway', city: 'Escondido', country: 'Belgium', zipcode: '70540'}});
+
+INSERT INTO supermarket.customer_with_addresses (id, name, telephone, email, default_address_key, addresses)
+VALUES (7febc928-a5d0-40d5-ad71-ef7ebe2f2fe3, 'Peter', '012345678912345', 'peter@gmail.com', 'HOME',
+{'HOME': {street_address: '1059 Ardella Center', city: 'Dundalk', country: 'Dominican Republic', zipcode: '47368'}});
